@@ -4,6 +4,59 @@
     (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.QuantumConsole = factory());
 }(this, (function () { 'use strict';
 
+    var flag = false;
+    function getQuery(key) {
+        var reg = new RegExp('(?:#|&)' + key + '=([^&]*)(&|$)');
+        var matched = window.location.hash.match(reg);
+        var res = !matched ? '' : decodeURIComponent(matched[1]);
+        return res || getQueryByName(key);
+    }
+    function getQueryByName(name) {
+        name = name.replace(/[\[\]]/g, "\\$&");
+        var url = window.location.href;
+        var reg = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)");
+        var res = reg.exec(url);
+        if (!res)
+            return null;
+        if (!res[2])
+            return '';
+        return decodeURIComponent(res[2].replace(/\+/g, " "));
+    }
+    function buildScript(url, callback) {
+        var _a;
+        if (flag)
+            return;
+        var ele = document.createElement('script');
+        ele.type = 'text/javascript';
+        ele.src = url;
+        ele.onload = function () {
+            flag = true;
+            callback();
+        };
+        var firstScript = document.getElementsByTagName('script')[0];
+        (_a = firstScript.parentNode) === null || _a === void 0 ? void 0 : _a.insertBefore(ele, firstScript);
+    }
+    function nextTick(cb) {
+        if (typeof setImmediate === 'function') {
+            setImmediate(ensureCallable(cb));
+        }
+        else {
+            setTimeout(ensureCallable(cb), 0);
+        }
+    }
+    function ensureCallable(fn) {
+        if (typeof fn !== 'function') {
+            throw new TypeError(fn + ' is not a function');
+        }
+        return fn;
+    }
+    function $(selector, el) {
+        if (!el) {
+            el = document;
+        }
+        return el.querySelector(selector);
+    }
+
     var QuanConsole = /** @class */ (function () {
         function QuanConsole(config) {
             if (config === void 0) { config = { url: '' }; }
@@ -11,7 +64,7 @@
                 url: ''
             };
             if (!config.url) {
-                console.warn('[QuanConsole] You must input a url to inject console!');
+                console.warn('[QuantumConsole] You must input a url to inject console!');
                 return;
             }
             this.config = config;
@@ -21,14 +74,14 @@
             if (this.config.entry) {
                 this.setEntry(this.config.entry);
             }
-            var showConsole = this.getQuery('console');
+            var showConsole = getQuery('console');
             if (showConsole) {
                 this.showConsole(showConsole === 'show');
             }
         };
         QuanConsole.prototype.showConsole = function (show) {
             var _this = this;
-            this.buildScript(this.config.url, function () {
+            buildScript(this.config.url, function () {
                 // @ts-ignore
                 _this.config.consoleConfig ? eruda.init(_this.config.consoleConfig) : eruda.init();
                 if (_this.config.plugins && _this.config.plugins.length) {
@@ -53,52 +106,19 @@
         };
         QuanConsole.prototype.setEntry = function (entry) {
             var _this = this;
-            var ele = document.querySelector(entry);
-            var count = 0;
-            if (ele) {
-                ele.addEventListener('click', function () {
-                    count += 1;
-                    if (count > 5) {
-                        count = -999999;
-                        _this.showConsole(true);
-                    }
-                });
-            }
-        };
-        QuanConsole.prototype.getQuery = function (key) {
-            var reg = new RegExp('(?:#|&)' + key + '=([^&]*)(&|$)');
-            var matched = window.location.hash.match(reg);
-            var res = !matched ? '' : decodeURIComponent(matched[1]);
-            return res || this.getQueryByName(key);
-        };
-        QuanConsole.prototype.getQueryByName = function (name) {
-            name = name.replace(/[\[\]]/g, "\\$&");
-            var url = window.location.href;
-            var reg = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)");
-            var res = reg.exec(url);
-            if (!res)
-                return null;
-            if (!res[2])
-                return '';
-            return decodeURIComponent(res[2].replace(/\+/g, " "));
-        };
-        QuanConsole.prototype.buildScript = function (url, callback) {
-            var _a;
-            var flag = false;
-            var ele = document.createElement('script');
-            ele.type = 'text/javascript';
-            ele.src = url;
-            // @ts-ignore
-            ele.onload = ele.onreadystatechange = function () {
-                // console.log(this.readyState);
-                // @ts-ignore
-                if (!flag && (!this.readyState || this.readyState === 'complete')) {
-                    flag = true;
-                    callback();
+            nextTick(function () {
+                var ele = $(entry);
+                var count = 0;
+                if (ele) {
+                    ele.addEventListener('click', function () {
+                        count += 1;
+                        if (count > 5) {
+                            count = -999999;
+                            _this.showConsole(true);
+                        }
+                    });
                 }
-            };
-            var firstScript = document.getElementsByTagName('script')[0];
-            (_a = firstScript.parentNode) === null || _a === void 0 ? void 0 : _a.insertBefore(ele, firstScript);
+            });
         };
         return QuanConsole;
     }());
