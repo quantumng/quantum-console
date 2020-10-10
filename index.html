@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <div id="entry" style="width: 100px;height: 100px;background-color: hotpink;"></div>
+    <script src="./index.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/eruda-timing@2.0.0"></script>
+    <script>
+        new QuantumConsole({
+            url: '//cdn.jsdelivr.net/npm/eruda',
+            entry: '#entry',
+            consoleConfig: {
+                tool: ['console', 'elements']
+            },
+            plugins: [erudaTiming]
+        });
+    </script>
+</body>
+</html>
