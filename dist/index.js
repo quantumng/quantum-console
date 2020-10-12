@@ -57,7 +57,7 @@
         return el.querySelector(selector);
     }
 
-    var QuanConsole = /** @class */ (function () {
+    var QuanConsole = (function () {
         function QuanConsole(config) {
             if (config === void 0) { config = { url: '' }; }
             this.config = {
@@ -82,23 +82,19 @@
         QuanConsole.prototype.showConsole = function (show) {
             var _this = this;
             buildScript(this.config.url, function () {
-                // @ts-ignore
                 _this.config.consoleConfig ? eruda.init(_this.config.consoleConfig) : eruda.init();
                 if (_this.config.plugins && _this.config.plugins.length) {
                     for (var i = 0, len = _this.config.plugins.length; i < len; i += 1) {
                         var plugin = _this.config.plugins[i];
-                        // @ts-ignore
                         eruda.add(plugin);
                     }
                 }
                 if (show) {
                     try {
-                        // @ts-ignore
                         eruda.show();
                     }
                     catch (e) { }
                     window.addEventListener('load', function () {
-                        // @ts-ignore
                         eruda.show();
                     });
                 }
